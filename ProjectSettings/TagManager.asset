@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Gound
   - Danger
+  - Coin
+  - EnergyOrb
+  - Obstacle
+  - DeathZone
   layers:
   - Default
   - TransparentFX
