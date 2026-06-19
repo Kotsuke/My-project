@@ -20,7 +20,7 @@ public class SettingsManager : MonoBehaviour
     public static SettingsManager Instance { get; private set; }
 
     [Header("References (Opsional — isi saat sudah ada)")]
-    [Tooltip("Drag AudioMixer ke sini setelah membuat AudioMixer asset")]
+    // [Tooltip("Drag AudioMixer ke sini setelah membuat AudioMixer asset")]
     // public UnityEngine.Audio.AudioMixer audioMixer;
 
     [Tooltip("Volume Profile untuk Post-Processing (biasanya DefaultVolumeProfile)")]
@@ -78,6 +78,12 @@ public class SettingsManager : MonoBehaviour
         // Master volume mengontrol semua suara
         AudioListener.volume = s.masterVolume;
 
+        // Sinkronkan volume ke AudioManager (BGM dan SFX loop)
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.RefreshVolumes();
+        }
+
         // ────────────────────────────────────────────────────
         // NANTI: Setelah AudioMixer dipasang, uncomment ini:
         // ────────────────────────────────────────────────────
@@ -116,11 +122,11 @@ public class SettingsManager : MonoBehaviour
         // Shadow
         if (s.shadowEnabled)
         {
-            QualitySettings.shadows = ShadowQuality.All;
+            QualitySettings.shadows = UnityEngine.ShadowQuality.All;
         }
         else
         {
-            QualitySettings.shadows = ShadowQuality.Disable;
+            QualitySettings.shadows = UnityEngine.ShadowQuality.Disable;
         }
 
         // Post-Processing

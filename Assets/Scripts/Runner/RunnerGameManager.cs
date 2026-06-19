@@ -206,11 +206,22 @@ public class RunnerGameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Kembali ke Main Menu
+    /// </summary>
+    public void GoToMainMenu()
+    {
+        Debug.Log("[RunnerGameManager] Kembali ke Main Menu...");
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    /// <summary>
     /// Keluar dari game
     /// </summary>
     public void QuitGame()
     {
         Debug.Log("[RunnerGameManager] Keluar dari game...");
+        Time.timeScale = 1f;
         Application.Quit();
     }
 }

@@ -494,6 +494,13 @@ public class RunnerMovement : MonoBehaviour
         if (_sm.CurrentState == RunnerState.Sliding)
             EndSlide();
 
+        // Jika sudah stunned, hanya perpanjang timer TANPA re-trigger animasi
+        if (_sm.CurrentState == RunnerState.Stunned)
+        {
+            _stunTimer = stunDuration;
+            return;
+        }
+
         _stunTimer = stunDuration;
         _sm.ForceSetState(RunnerState.Stunned);
         RunnerEvents.OnStunned?.Invoke();
@@ -615,7 +622,16 @@ public class RunnerMovement : MonoBehaviour
         else if (other.CompareTag("EnergyOrb"))
         {
             CollectEnergyOrb();
-            Destroy(other.gameObject);
+
+            // Gunakan Object Pool jika tersedia, fallback ke Destroy
+            if (PoolManager.Instance != null && PoolManager.Instance.HasPool("EnergyOrb"))
+            {
+                PoolManager.Instance.Despawn("EnergyOrb", other.gameObject);
+            }
+            else
+            {
+                Destroy(other.gameObject);
+            }
         }
     }
 

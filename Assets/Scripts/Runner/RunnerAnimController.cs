@@ -122,7 +122,17 @@ public class RunnerAnimController : MonoBehaviour
     private void OnStunned()
     {
         if (_anim == null) return;
+
+        // Reset trigger lain yang mungkin masih pending
+        _anim.ResetTrigger(Hash_Jump);
+        _anim.ResetTrigger(Hash_Slide);
+
         _anim.SetBool(Hash_Stunned, true);
+
+        // Langsung CrossFade ke state Stunned agar AnyState
+        // tidak terus re-trigger animasi setiap frame.
+        // (Fix untuk "Can Transition To Self" di AnyState → Stunned)
+        _anim.CrossFade("Stunned", 0.1f, 0);
     }
 
     private void OnDied()

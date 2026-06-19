@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7132248298833763937
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6699160912722234941}
+  - component: {fileID: 829582961438736265}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6699160912722234941
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7132248298833763937}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &829582961438736265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7132248298833763937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d14ee6b6e750ad4ca7b9ee69d042213, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  bgmGameplay: {fileID: 8300000, guid: a03d93a7b4f64e5459721b698252c9a4, type: 3}
+  bgmMenu: {fileID: 8300000, guid: 0ff629fdd02857c43982b871c68ea090, type: 3}
+  bgmBaseVolume: 0.5
+  bgmFadeDuration: 1
+  sfxJump: {fileID: 8300000, guid: 4aa5d7cee6fbfa94f81fafa2e3b08025, type: 3}
+  sfxSlide: {fileID: 8300000, guid: 98dce758a6706b94faa885117b292e4c, type: 3}
+  sfxLand: {fileID: 8300000, guid: 4566c39f1701eb049a80feb4f41b7a29, type: 3}
+  sfxLaneChange: {fileID: 8300000, guid: 771595f7289636e409fc114b9d0a95c9, type: 3}
+  sfxStun: {fileID: 8300000, guid: 37d412a79d57fed4eb66f38ba422daec, type: 3}
+  sfxDeath: {fileID: 8300000, guid: 668fa2fd09976b04a958d5c8a951f24a, type: 3}
+  sfxEnergyOrb: {fileID: 8300000, guid: 4a99212b92e2d3840bbbd42fb5bafd0f, type: 3}
+  sfxCoinCollect: {fileID: 8300000, guid: 4a99212b92e2d3840bbbd42fb5bafd0f, type: 3}
+  sfxButtonClick: {fileID: 8300000, guid: 7af067c17bd6b274cbeb94471c02f464, type: 3}
+  sfxCountdown: {fileID: 0}
+  sfxGo: {fileID: 0}
+  sfxBoostLoop: {fileID: 0}
+  sfxHeartbeat: {fileID: 0}
+  sfxFootstep: {fileID: 8300000, guid: b5765cd98b07b1644ac9ae9b090fb854, type: 3}
+  sfxPoolSize: 8
+  sfxBaseVolume: 1
