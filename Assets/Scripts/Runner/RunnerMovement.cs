@@ -96,6 +96,13 @@ public class RunnerMovement : MonoBehaviour
     public float stunSpeed = 3f;
 
     // ═══════════════════════════════════════════════════════════
+    //  FALL LIMIT
+    // ═══════════════════════════════════════════════════════════
+    [Header("Fall Limit")]
+    [Tooltip("Batas koordinat Y minimum. Jika player berada di bawah ini, player mati jatuh.")]
+    public float fallThreshold = -5f;
+
+    // ═══════════════════════════════════════════════════════════
     //  ENERGY ORB (speed boost)
     // ═══════════════════════════════════════════════════════════
     [Header("Energy Orb / Speed Boost")]
@@ -164,9 +171,8 @@ public class RunnerMovement : MonoBehaviour
 
     private void Start()
     {
-        // Batasi target FPS dan nyalakan VSync agar game berjalan stabil dan ringan
-        Application.targetFrameRate = 60;
-        QualitySettings.vSyncCount = 1;
+        // FPS dan VSync sekarang dikelola oleh SettingsManager
+        // (Lihat GameSettings.cs dan SettingsManager.cs)
 
         _currentSpeed = 0f; // Mulai dari diam
         _currentLane  = 0;
@@ -198,6 +204,13 @@ public class RunnerMovement : MonoBehaviour
     {
         // Jangan proses apapun saat mati
         if (_sm.CurrentState == RunnerState.Dying) return;
+
+        // Cek jika jatuh ke luar map (di bawah batas Y)
+        if (transform.position.y < fallThreshold)
+        {
+            TriggerDeath();
+            return;
+        }
 
         // Proses hitung mundur di awal game (Idle state)
         if (_sm.CurrentState == RunnerState.Idle)
@@ -379,6 +392,8 @@ public class RunnerMovement : MonoBehaviour
     // ── Move Input: HANYA kiri/kanan, abaikan maju/mundur ──
     private void OnMoveInput(InputAction.CallbackContext ctx)
     {
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.IsPaused) return;
+
         // Jangan izinkan pindah lane saat mati atau saat masih bersiap (Idle)
         if (_sm.CurrentState == RunnerState.Dying || _sm.CurrentState == RunnerState.Idle) return;
 
@@ -408,6 +423,8 @@ public class RunnerMovement : MonoBehaviour
     // ── Jump ──
     private void OnJumpInput(InputAction.CallbackContext ctx)
     {
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.IsPaused) return;
+
         if (_sm.CurrentState == RunnerState.Dying
          || _sm.CurrentState == RunnerState.Stunned
          || _sm.CurrentState == RunnerState.Sliding) return; // TIDAK boleh lompat saat sedang slide
@@ -429,6 +446,8 @@ public class RunnerMovement : MonoBehaviour
     // ── Slide ──
     private void OnSlideInput(InputAction.CallbackContext ctx)
     {
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.IsPaused) return;
+
         if (!_isGrounded) return;
         if (_sm.CurrentState != RunnerState.Running) return;
 
@@ -513,6 +532,70 @@ public class RunnerMovement : MonoBehaviour
         RunnerEvents.OnEnergyOrbCollected?.Invoke();
     }
 
+    // ═══════════════════════════════════════════════════════════
+    //  PUBLIC METHODS UNTUK BUTTON UI CANVAS
+    // ═══════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Pindah lane ke kiri (dipanggil dari tombol UI Kiri)
+    /// </summary>
+    public void MoveLeft()
+    {
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.IsPaused) return;
+        if (_sm.CurrentState == RunnerState.Dying || _sm.CurrentState == RunnerState.Idle) return;
+
+        if (_currentLane > -1)
+        {
+            _currentLane--;
+            RunnerEvents.OnLaneChanged?.Invoke(_currentLane);
+        }
+    }
+
+    /// <summary>
+    /// Pindah lane ke kanan (dipanggil dari tombol UI Kanan)
+    /// </summary>
+    public void MoveRight()
+    {
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.IsPaused) return;
+        if (_sm.CurrentState == RunnerState.Dying || _sm.CurrentState == RunnerState.Idle) return;
+
+        if (_currentLane < 1)
+        {
+            _currentLane++;
+            RunnerEvents.OnLaneChanged?.Invoke(_currentLane);
+        }
+    }
+
+    /// <summary>
+    /// Melompat (dipanggil dari tombol UI Lompat)
+    /// </summary>
+    public void PressJump()
+    {
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.IsPaused) return;
+
+        if (_sm.CurrentState == RunnerState.Dying
+         || _sm.CurrentState == RunnerState.Stunned
+         || _sm.CurrentState == RunnerState.Sliding) return;
+
+        if (_isGrounded && _sm.CurrentState == RunnerState.Running)
+        {
+            PerformJump();
+        }
+    }
+
+    /// <summary>
+    /// Meluncur / Slide (dipanggil dari tombol UI Slide)
+    /// </summary>
+    public void PressSlide()
+    {
+        if (RunnerGameManager.Instance != null && RunnerGameManager.Instance.IsPaused) return;
+
+        if (!_isGrounded) return;
+        if (_sm.CurrentState != RunnerState.Running) return;
+
+        StartSlide();
+    }
+
     /// <summary>
     /// Collision detection untuk halangan dan pickup.
     /// Tag "EnergyOrb" = speed boost (animasi Sprint).
@@ -523,7 +606,7 @@ public class RunnerMovement : MonoBehaviour
     {
         if (other.CompareTag("Obstacle"))
         {
-            TriggerDeath(); // Tabrak obstacle langsung memicu kematian
+            TriggerStun(); // Tabrak obstacle sekarang memicu stun (membuat bot mendekat)
         }
         else if (other.CompareTag("DeathZone"))
         {

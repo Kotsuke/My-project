@@ -128,6 +128,7 @@ public class RunnerAnimController : MonoBehaviour
     private void OnDied()
     {
         if (_anim == null) return;
+        _anim.SetBool(Hash_Stunned, false); // Matikan bool Stunned agar transisi ke Dying tidak terhambat
         _anim.SetTrigger(Hash_Die);
     }
 

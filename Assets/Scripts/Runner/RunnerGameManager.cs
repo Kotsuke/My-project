@@ -17,9 +17,17 @@ public class RunnerGameManager : MonoBehaviour
     [Tooltip("Panel UI yang muncul saat player mencapai garis finish (Victory)")]
     [SerializeField] private GameObject victoryPanel;
 
+    [Tooltip("Panel UI yang muncul saat game dijeda (Pause)")]
+    [SerializeField] private GameObject pausePanel;
+
+    [Tooltip("Panel UI Settings")]
+    [SerializeField] private GameObject settingsPanel;
+
     [Header("Settings")]
     [Tooltip("Jeda waktu sebelum memunculkan UI Game Over (agar animasi mati selesai)")]
     [SerializeField] private float gameOverDelay = 1.5f;
+
+    public bool IsPaused { get; private set; } = false;
 
     private void Awake()
     {
@@ -30,9 +38,14 @@ public class RunnerGameManager : MonoBehaviour
         }
         Instance = this;
 
+        // Reset time scale ke normal (jika scene sebelumnya ter-pause saat reload)
+        Time.timeScale = 1f;
+
         // Pastikan panel UI mati saat game mulai
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (victoryPanel != null) victoryPanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
     }
 
     private void OnEnable()
@@ -85,6 +98,80 @@ public class RunnerGameManager : MonoBehaviour
         }
     }
 
+    // ── Jeda Permainan (Pause) ──
+
+    /// <summary>
+    /// Jeda permainan (Pause)
+    /// </summary>
+    public void PauseGame()
+    {
+        if (IsPaused) return;
+
+        IsPaused = true;
+        Time.timeScale = 0f; // Hentikan waktu permainan (animasi, fisika, update)
+        
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(true);
+        }
+        Debug.Log("[RunnerGameManager] Game Dijeda (Paused).");
+    }
+
+    /// <summary>
+    /// Lanjutkan permainan (Resume)
+    /// </summary>
+    public void ResumeGame()
+    {
+        if (!IsPaused) return;
+
+        IsPaused = false;
+        Time.timeScale = 1f; // Kembalikan waktu permainan ke normal
+        
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(false);
+        }
+        Debug.Log("[RunnerGameManager] Game Dilanjutkan (Resumed).");
+    }
+
+    // ── Settings Panel ──
+
+    /// <summary>
+    /// Buka panel settings (jeda game juga)
+    /// </summary>
+    public void OpenSettings()
+    {
+        if (settingsPanel != null)
+        {
+            // Sembunyikan pause panel jika terbuka
+            if (pausePanel != null) pausePanel.SetActive(false);
+
+            settingsPanel.SetActive(true);
+            IsPaused = true;
+            Time.timeScale = 0f;
+            Debug.Log("[RunnerGameManager] Settings Panel dibuka.");
+        }
+        else
+        {
+            Debug.LogWarning("[RunnerGameManager] settingsPanel belum di-assign!");
+        }
+    }
+
+    /// <summary>
+    /// Tutup panel settings (lanjutkan game)
+    /// </summary>
+    public void CloseSettings()
+    {
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(false);
+        }
+
+        IsPaused = false;
+        Time.timeScale = 1f;
+        Debug.Log("[RunnerGameManager] Settings Panel ditutup.");
+    }
+
     // ── Fungsi Public untuk Tombol UI ──
 
     /// <summary>
@@ -93,6 +180,7 @@ public class RunnerGameManager : MonoBehaviour
     public void RestartLevel()
     {
         Debug.Log("[RunnerGameManager] Merestart level...");
+        Time.timeScale = 1f; // Pastikan waktu normal sebelum memuat scene
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -102,6 +190,7 @@ public class RunnerGameManager : MonoBehaviour
     public void LoadNextLevel()
     {
         int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        Time.timeScale = 1f; // Pastikan waktu normal sebelum memuat scene
         
         // Periksa apakah scene berikutnya ada di Build Settings
         if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
@@ -114,5 +203,14 @@ public class RunnerGameManager : MonoBehaviour
             Debug.Log("[RunnerGameManager] Tidak ada level berikutnya! Kembali ke Main Menu (Index 0)...");
             SceneManager.LoadScene(0); // Biasanya Main Menu berada di index 0
         }
+    }
+
+    /// <summary>
+    /// Keluar dari game
+    /// </summary>
+    public void QuitGame()
+    {
+        Debug.Log("[RunnerGameManager] Keluar dari game...");
+        Application.Quit();
     }
 }
