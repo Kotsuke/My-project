@@ -23,6 +23,9 @@ public class RunnerGameManager : MonoBehaviour
     [Tooltip("Panel UI Settings")]
     [SerializeField] private GameObject settingsPanel;
 
+    [Tooltip("Panel kontrol gerak player (tombol kiri, kanan, jump, slide) — akan dinonaktifkan saat Game Over / Victory")]
+    [SerializeField] private GameObject controlsPanel;
+
     [Header("Settings")]
     [Tooltip("Jeda waktu sebelum memunculkan UI Game Over (agar animasi mati selesai)")]
     [SerializeField] private float gameOverDelay = 1.5f;
@@ -69,6 +72,9 @@ public class RunnerGameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(gameOverDelay);
         
+        // Nonaktifkan kontrol gerak player
+        if (controlsPanel != null) controlsPanel.SetActive(false);
+
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(true);
@@ -87,6 +93,9 @@ public class RunnerGameManager : MonoBehaviour
     {
         Debug.Log("[RunnerGameManager] Player berhasil menyentuh garis finish!");
         
+        // Nonaktifkan kontrol gerak player
+        if (controlsPanel != null) controlsPanel.SetActive(false);
+
         if (victoryPanel != null)
         {
             victoryPanel.SetActive(true);
@@ -110,6 +119,9 @@ public class RunnerGameManager : MonoBehaviour
         IsPaused = true;
         Time.timeScale = 0f; // Hentikan waktu permainan (animasi, fisika, update)
         
+        // Pause SFX player (footstep, boost, dll) — BGM tetap jalan
+        if (AudioManager.Instance != null) AudioManager.Instance.PauseSFX();
+
         if (pausePanel != null)
         {
             pausePanel.SetActive(true);
@@ -127,6 +139,9 @@ public class RunnerGameManager : MonoBehaviour
         IsPaused = false;
         Time.timeScale = 1f; // Kembalikan waktu permainan ke normal
         
+        // Resume SFX player
+        if (AudioManager.Instance != null) AudioManager.Instance.ResumeSFX();
+
         if (pausePanel != null)
         {
             pausePanel.SetActive(false);
@@ -149,6 +164,10 @@ public class RunnerGameManager : MonoBehaviour
             settingsPanel.SetActive(true);
             IsPaused = true;
             Time.timeScale = 0f;
+
+            // Pause SFX player — BGM tetap jalan
+            if (AudioManager.Instance != null) AudioManager.Instance.PauseSFX();
+
             Debug.Log("[RunnerGameManager] Settings Panel dibuka.");
         }
         else
@@ -169,6 +188,10 @@ public class RunnerGameManager : MonoBehaviour
 
         IsPaused = false;
         Time.timeScale = 1f;
+
+        // Resume SFX player
+        if (AudioManager.Instance != null) AudioManager.Instance.ResumeSFX();
+
         Debug.Log("[RunnerGameManager] Settings Panel ditutup.");
     }
 

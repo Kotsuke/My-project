@@ -107,6 +107,7 @@ public class AudioManager : MonoBehaviour
     private AudioSource _bgmSource;
     private AudioSource _boostLoopSource;
     private AudioSource _footstepSource;
+    private AudioSource _uiSource; // Dedicated untuk UI — tidak pernah di-pause
     private List<AudioSource> _sfxPool = new List<AudioSource>();
     private int _sfxIndex = 0;
     private Coroutine _bgmFadeCoroutine;
@@ -227,6 +228,13 @@ public class AudioManager : MonoBehaviour
             src.playOnAwake = false;
             _sfxPool.Add(src);
         }
+
+        // UI Source — dedicated untuk suara klik tombol, TIDAK pernah di-pause
+        GameObject uiGO = new GameObject("UI_Source");
+        uiGO.transform.SetParent(transform);
+        _uiSource = uiGO.AddComponent<AudioSource>();
+        _uiSource.loop = false;
+        _uiSource.playOnAwake = false;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -342,10 +350,12 @@ public class AudioManager : MonoBehaviour
 
     /// <summary>
     /// Mainkan suara klik tombol UI. Panggil dari Button OnClick.
+    /// Menggunakan AudioSource khusus UI agar tetap berbunyi saat pause.
     /// </summary>
     public void PlayButtonClick()
     {
-        PlaySFX(sfxButtonClick, 0.7f);
+        if (sfxButtonClick == null || _uiSource == null) return;
+        _uiSource.PlayOneShot(sfxButtonClick, GetSFXVolume() * 0.7f);
     }
 
     // ── Boost Loop ──
@@ -505,6 +515,51 @@ public class AudioManager : MonoBehaviour
         if (_footstepSource != null && _footstepSource.isPlaying)
         {
             _footstepSource.volume = GetSFXVolume() * 0.5f;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  PAUSE / RESUME SFX
+    //  BGM tetap jalan, hanya SFX (footstep, boost, pool) yang di-pause.
+    // ═══════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Pause semua SFX (footstep, boost loop, SFX pool).
+    /// BGM tetap terdengar.
+    /// Dipanggil dari RunnerGameManager.PauseGame().
+    /// </summary>
+    public void PauseSFX()
+    {
+        if (_footstepSource != null && _footstepSource.isPlaying)
+            _footstepSource.Pause();
+
+        if (_boostLoopSource != null && _boostLoopSource.isPlaying)
+            _boostLoopSource.Pause();
+
+        // Pause semua SFX one-shot yang sedang bermain
+        foreach (AudioSource src in _sfxPool)
+        {
+            if (src != null && src.isPlaying)
+                src.Pause();
+        }
+    }
+
+    /// <summary>
+    /// Resume semua SFX yang di-pause.
+    /// Dipanggil dari RunnerGameManager.ResumeGame().
+    /// </summary>
+    public void ResumeSFX()
+    {
+        if (_footstepSource != null)
+            _footstepSource.UnPause();
+
+        if (_boostLoopSource != null)
+            _boostLoopSource.UnPause();
+
+        foreach (AudioSource src in _sfxPool)
+        {
+            if (src != null)
+                src.UnPause();
         }
     }
 
