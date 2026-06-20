@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Unity.Cinemachine;
 
 // ============================================================
 //  CAMERA EFFECTS
@@ -41,6 +42,13 @@ public class CameraEffects : MonoBehaviour
     [SerializeField] private float landShakeIntensity = 0.08f;
     [Tooltip("Durasi shake saat landing (detik)")]
     [SerializeField] private float landShakeDuration = 0.15f;
+
+    // ═══════════════════════════════════════════════════════════
+    //  CINEMACHINE SHAKE
+    // ═══════════════════════════════════════════════════════════
+    [Header("Cinemachine Shake")]
+    [Tooltip("Preset noise untuk Cinemachine shake (misal: 6D Shake)")]
+    [SerializeField] private NoiseSettings shakeNoiseSettings;
 
     // ═══════════════════════════════════════════════════════════
     //  FOV EFFECT
@@ -84,6 +92,7 @@ public class CameraEffects : MonoBehaviour
     private Coroutine _shakeCoroutine;
     private Coroutine _vignetteCoroutine;
     private Coroutine _chromaticCoroutine;
+    private CinemachineBasicMultiChannelPerlin _perlin;
 
     // Post-processing components (cached)
     private Vignette _vignette;
@@ -112,6 +121,18 @@ public class CameraEffects : MonoBehaviour
 
         _originalLocalPos = transform.localPosition;
         _targetFOV = normalFOV;
+
+        _perlin = GetComponent<CinemachineBasicMultiChannelPerlin>();
+        if (_perlin == null)
+        {
+            _perlin = gameObject.AddComponent<CinemachineBasicMultiChannelPerlin>();
+            if (shakeNoiseSettings != null)
+            {
+                _perlin.NoiseProfile = shakeNoiseSettings;
+            }
+            _perlin.AmplitudeGain = 0f;
+            _perlin.FrequencyGain = 1f;
+        }
 
         CachePostProcessing();
     }
@@ -179,25 +200,50 @@ public class CameraEffects : MonoBehaviour
     {
         float elapsed = 0f;
 
-        while (elapsed < duration)
+        if (_perlin != null)
         {
-            elapsed += Time.unscaledDeltaTime;
-            float progress = elapsed / duration;
+            if (_perlin.NoiseProfile == null && shakeNoiseSettings != null)
+            {
+                _perlin.NoiseProfile = shakeNoiseSettings;
+            }
 
-            // Decay: intensitas berkurang secara exponential
-            float currentIntensity = intensity * (1f - progress);
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = elapsed / duration;
 
-            // Random offset
-            float offsetX = Random.Range(-1f, 1f) * currentIntensity;
-            float offsetY = Random.Range(-1f, 1f) * currentIntensity;
+                // Decay: intensitas berkurang secara linear
+                float currentIntensity = intensity * (1f - progress);
+                _perlin.AmplitudeGain = currentIntensity;
 
-            transform.localPosition = _originalLocalPos + new Vector3(offsetX, offsetY, 0f);
+                yield return null;
+            }
 
-            yield return null;
+            _perlin.AmplitudeGain = 0f;
+        }
+        else
+        {
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = elapsed / duration;
+
+                // Decay: intensitas berkurang secara exponential
+                float currentIntensity = intensity * (1f - progress);
+
+                // Random offset
+                float offsetX = Random.Range(-1f, 1f) * currentIntensity;
+                float offsetY = Random.Range(-1f, 1f) * currentIntensity;
+
+                transform.localPosition = _originalLocalPos + new Vector3(offsetX, offsetY, 0f);
+
+                yield return null;
+            }
+
+            // Reset posisi
+            transform.localPosition = _originalLocalPos;
         }
 
-        // Reset posisi
-        transform.localPosition = _originalLocalPos;
         _shakeCoroutine = null;
     }
 
@@ -444,4 +490,14 @@ public class CameraEffects : MonoBehaviour
             if (_cam != null) _cam.fieldOfView = normalFOV;
         }
     }
+
+#if UNITY_EDITOR
+    private void Reset()
+    {
+        if (shakeNoiseSettings == null)
+        {
+            shakeNoiseSettings = UnityEditor.AssetDatabase.LoadAssetAtPath<NoiseSettings>("Packages/com.unity.cinemachine/Presets/Noise/6D Shake.asset");
+        }
+    }
+#endif
 }
